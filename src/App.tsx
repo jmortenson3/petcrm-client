@@ -1,15 +1,29 @@
 import React from 'react';
-import Login from './auth/Login';
 import OrganizationsList from './OrganizationsList';
+import NavBar from './navbar/NavBar';
+import { gql } from 'apollo-boost';
+import { useQuery } from '@apollo/react-hooks';
 
-function App() {
+export const GET_USER = gql`
+  query GetUser {
+    email @client
+  }
+`;
+
+const GetUser = () => {
+  const { data } = useQuery(GET_USER);
+  return <p>{/* This is you: <strong>{data.email}</strong> */}</p>;
+};
+
+const App = () => {
   return (
     <div className="App">
       <h2>My first Apollo app 🚀</h2>
-      <Login />
+      <GetUser />
+      <NavBar />
       <OrganizationsList />
     </div>
   );
-}
+};
 
 export default App;

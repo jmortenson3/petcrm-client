@@ -1,16 +1,18 @@
 import React, { useState, FormEvent } from 'react';
 import { gql } from 'apollo-boost';
-import { useMutation } from '@apollo/react-hooks';
+import { useMutation, useApolloClient } from '@apollo/react-hooks';
 
 const LOGIN = gql`
   mutation login($username: String!, $password: String!) {
-    login(username: $username, password: $password) {
+    login(input: { username: $username, password: $password }) {
       id
+      email
     }
   }
 `;
 
 const Login = () => {
+  const client = useApolloClient();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [login, { data, error }] = useMutation(LOGIN);
@@ -21,11 +23,16 @@ const Login = () => {
       `Logging in with username ${username} and password ${password}`
     );
 
-    await login({ variables: { username, password } });
-    if (error) {
-      console.log(JSON.stringify(error));
+    try {
+      const result = await login({ variables: { username, password } });
+      client.writeData({
+        data: {
+          isLoggedIn: true,
+        },
+      });
+    } catch (err) {
+      console.log(`caught error: ${JSON.stringify(err)}`);
     }
-    console.log(JSON.stringify(data));
   };
 
   return (
