@@ -2,6 +2,7 @@ import gql from 'graphql-tag';
 import { ApolloCache } from 'apollo-cache';
 import { Resolvers } from 'apollo-client';
 
+// need to understand this part a little more...
 export const typeDefs = gql`
   extend type User {
     isLoggedIn: Boolean!

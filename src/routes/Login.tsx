@@ -2,7 +2,11 @@ import React, { useState, FormEvent, FunctionComponent } from 'react';
 import { gql } from 'apollo-boost';
 import { useMutation, useApolloClient } from '@apollo/react-hooks';
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
+
+type LoginProps = {
+  isAuthed: boolean | undefined;
+};
 
 const LOGIN = gql`
   mutation login($username: String!, $password: String!) {
@@ -17,11 +21,15 @@ const Button = styled.button`
   border-radius: ${(props) => props.theme.borderRadius};
 `;
 
-const Login: FunctionComponent = () => {
+const Login: FunctionComponent<LoginProps> = ({ children, isAuthed }) => {
   const client = useApolloClient();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [login, { data, error }] = useMutation(LOGIN);
+
+  if (isAuthed) {
+    return <Redirect to="/app" />;
+  }
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -30,22 +38,28 @@ const Login: FunctionComponent = () => {
     );
 
     try {
-      const result = await login({ variables: { username, password } });
-      const { id, email } = result.data.login;
-      console.log(result);
-      client.writeData({
-        data: {
-          isAuthed: true,
-          user: {
-            id,
-            email,
-          },
-        },
-      });
+      await login({ variables: { username, password } });
     } catch (err) {
       console.log(`caught error: ${JSON.stringify(err)}`);
     }
   };
+
+  if (data) {
+    console.log(`[Login] data: ${JSON.stringify(data)}`);
+    const { id, email } = data.login;
+    client.writeData({
+      data: {
+        isAuthed: true,
+        user: {
+          id,
+          email,
+        },
+      },
+    });
+    return <Redirect to="/app" />;
+  }
+
+  console.log(`[Login] rendering...`);
 
   return (
     <div>

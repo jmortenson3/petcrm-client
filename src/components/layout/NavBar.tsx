@@ -5,8 +5,15 @@ const NavBar: FunctionComponent = () => {
   return (
     <nav>
       <ul>
-        <Link to="/">Home</Link>
-        <Link to="/app">App</Link>
+        <li>
+          <Link to="/">Home</Link>
+        </li>
+        <li>
+          <Link to="/app">App</Link>
+        </li>
+        <li>
+          <Link to="/anotherRoute">Another Router</Link>
+        </li>
       </ul>
     </nav>
   );

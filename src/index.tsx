@@ -2,9 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { ApolloClient, InMemoryCache } from 'apollo-boost';
 import { ApolloProvider, useQuery } from '@apollo/react-hooks';
-import { createHttpLink } from 'apollo-link-http';
+import { createHttpLink, HttpLink } from 'apollo-link-http';
 import { gql } from 'apollo-boost';
-import App from './App';
+import App from './routes/App';
 import * as serviceWorker from './serviceWorker';
 import { typeDefs, resolvers } from './resolvers';
 import './index.css';
@@ -12,36 +12,40 @@ import { ThemeProvider } from 'styled-components';
 import { theme } from './Theme';
 import { BrowserRouter } from 'react-router-dom';
 import Router from './routes/Router';
+import AutoLoginWrapper from './components/wrappers/AutoLoginWrapper';
 
 const cache = new InMemoryCache();
 
-const httpLink = createHttpLink({
+const link = createHttpLink({
   uri: 'http://localhost:3001/graphql',
   credentials: 'include',
 });
 
 const client = new ApolloClient({
-  link: httpLink,
+  link,
   cache,
   typeDefs,
   resolvers,
 });
 
+console.log('[index] Writing cache');
 cache.writeData({
   data: {
-    isAuthed: false,
+    isAuthed: undefined,
     user: {},
   },
 });
+console.log('[index] Finished writing cache');
 
 ReactDOM.render(
   <BrowserRouter>
     <ApolloProvider client={client}>
       <ThemeProvider theme={theme}>
-        <React.StrictMode>
+        {/* <React.StrictMode> */}
+        <AutoLoginWrapper>
           <Router />
-          <App />
-        </React.StrictMode>
+        </AutoLoginWrapper>
+        {/* </React.StrictMode> */}
       </ThemeProvider>
     </ApolloProvider>
   </BrowserRouter>,
