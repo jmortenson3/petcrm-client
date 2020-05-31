@@ -1,7 +1,8 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, FunctionComponent } from 'react';
 import { gql } from 'apollo-boost';
 import { useMutation, useApolloClient } from '@apollo/react-hooks';
-import { Link } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
+import styled from 'styled-components';
 
 const SIGNUP = gql`
   mutation signup($username: String!, $password: String!) {
@@ -11,12 +12,23 @@ const SIGNUP = gql`
     }
   }
 `;
+type SignupProps = {
+  isAuthed: boolean | undefined;
+};
 
-const Signup = () => {
+const Button = styled.button`
+  border-radius: ${(props) => props.theme.borderRadius};
+`;
+
+const Login: FunctionComponent<SignupProps> = ({ children, isAuthed }) => {
   const client = useApolloClient();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [login, { data, error }] = useMutation(SIGNUP);
+  const [signup, { data, error }] = useMutation(SIGNUP);
+
+  if (isAuthed) {
+    return <Redirect to="/app" />;
+  }
 
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
@@ -25,22 +37,28 @@ const Signup = () => {
     );
 
     try {
-      const result = await login({ variables: { username, password } });
-      const { id, email } = result.data.login;
-      console.log(result);
-      client.writeData({
-        data: {
-          isAuthed: true,
-          user: {
-            id,
-            email,
-          },
-        },
-      });
+      await signup({ variables: { username, password } });
     } catch (err) {
       console.log(`caught error: ${JSON.stringify(err)}`);
     }
   };
+
+  if (data) {
+    console.log(`[Signup] data: ${JSON.stringify(data)}`);
+    const { id, email } = data.signup;
+    client.writeData({
+      data: {
+        isAuthed: true,
+        user: {
+          id,
+          email,
+        },
+      },
+    });
+    return <Redirect to="/app" />;
+  }
+
+  console.log(`[Signup] rendering...`);
 
   return (
     <div>
@@ -54,7 +72,7 @@ const Signup = () => {
         <input
           type="password"
           onChange={(e) => setPassword(e.target.value)}></input>
-        <button type="submit">Signup</button>
+        <Button type="submit">Signup</Button>
       </form>
       <p>
         Already have an account? <Link to="/login">Login</Link>
@@ -63,4 +81,4 @@ const Signup = () => {
   );
 };
 
-export default Signup;
+export default Login;
