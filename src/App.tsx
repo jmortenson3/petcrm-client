@@ -1,27 +1,52 @@
-import React from 'react';
-import OrganizationsList from './OrganizationsList';
-import NavBar from './navbar/NavBar';
-import { gql } from 'apollo-boost';
-import { useQuery } from '@apollo/react-hooks';
+import React, { useEffect } from 'react';
+import { gql, InMemoryCache } from 'apollo-boost';
+import Router from './routes/Router';
+import Layout from './components/layout/Layout';
+import { useQuery, useMutation } from '@apollo/react-hooks';
+import { Redirect } from 'react-router-dom';
 
-export const GET_USER = gql`
-  query GetUser {
-    email @client
+const AUTO_LOGIN = gql`
+  mutation autoLogin {
+    autoLogin {
+      id
+      email
+    }
   }
 `;
 
-const GetUser = () => {
-  const { data } = useQuery(GET_USER);
-  return <p>{/* This is you: <strong>{data.email}</strong> */}</p>;
-};
+const cache = new InMemoryCache();
+
+cache.writeData({
+  data: {
+    isAuthed: false,
+    user: {},
+  },
+});
 
 const App = () => {
+  const [autoLogin, { error, loading, data }] = useMutation(AUTO_LOGIN);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await autoLogin();
+      } catch (err) {
+        console.log(err);
+      }
+    })();
+  }, []);
+
+  if (error) {
+    return <Redirect to="/login" />;
+  }
+
   return (
     <div className="App">
-      <h2>My first Apollo app 🚀</h2>
-      <GetUser />
-      <NavBar />
-      <OrganizationsList />
+      <Layout>
+        {loading && <p>Logging you in...</p>}
+        {error && <pre>{JSON.stringify(error, null, 2)}</pre>}
+        {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
+      </Layout>
     </div>
   );
 };
