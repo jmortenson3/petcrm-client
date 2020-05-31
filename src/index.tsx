@@ -8,7 +8,10 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { typeDefs, resolvers } from './resolvers';
 import './index.css';
-import Login from './auth/Login';
+import { ThemeProvider } from 'styled-components';
+import { theme } from './Theme';
+import { BrowserRouter } from 'react-router-dom';
+import Router from './routes/Router';
 
 const cache = new InMemoryCache();
 
@@ -26,28 +29,22 @@ const client = new ApolloClient({
 
 cache.writeData({
   data: {
-    isLoggedIn: false,
+    isAuthed: false,
     user: {},
   },
 });
 
-const IS_LOGGED_IN = gql`
-  query IsUserLoggedIn {
-    isLoggedIn @client
-  }
-`;
-
-const IsLoggedIn = () => {
-  const { data } = useQuery(IS_LOGGED_IN);
-  return data.isLoggedIn ? <App /> : <Login />;
-};
-
 ReactDOM.render(
-  <ApolloProvider client={client}>
-    <React.StrictMode>
-      <IsLoggedIn />
-    </React.StrictMode>
-  </ApolloProvider>,
+  <BrowserRouter>
+    <ApolloProvider client={client}>
+      <ThemeProvider theme={theme}>
+        <React.StrictMode>
+          <Router />
+          <App />
+        </React.StrictMode>
+      </ThemeProvider>
+    </ApolloProvider>
+  </BrowserRouter>,
   document.getElementById('root')
 );
 
