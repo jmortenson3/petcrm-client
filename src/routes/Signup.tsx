@@ -43,6 +43,10 @@ const Login: FunctionComponent<SignupProps> = ({ children, isAuthed }) => {
     }
   };
 
+  if (error) {
+    console.log(error);
+  }
+
   if (data) {
     console.log(`[Signup] data: ${JSON.stringify(data)}`);
     const { id, email } = data.signup;

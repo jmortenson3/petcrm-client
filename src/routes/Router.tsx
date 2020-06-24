@@ -5,33 +5,52 @@ import Signup from './Signup';
 import { gql } from 'apollo-boost';
 import { useQuery } from '@apollo/react-hooks';
 import App from './App';
+import BookingRequests from './BookingRequests';
+import Dashboard from './Dashboard';
+import Manage from './Manage';
+import EditLocation from './EditLocation';
+import EditOrganization from './EditOrganization';
+import CreateLocation from './CreateLocation';
 
-export const IS_AUTHED = gql`
-  query IsAuthed {
+const GET_CONTEXT = gql`
+  query getContext {
     isAuthed @client
+    context @client {
+      __typename
+      organization {
+        id
+        __typename
+      }
+      location {
+        id
+        __typename
+      }
+    }
   }
 `;
 
 interface ProtectedRouteProps extends RouteProps {}
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = (props) => {
-  const { loading, error, data } = useQuery(IS_AUTHED);
+  const { loading, error, data } = useQuery(GET_CONTEXT);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
   if (error) {
-    console.log(`[ProtectedRoute] IS_AUTHED failed`);
     console.log(error);
     return <Redirect to="/login" />;
   }
 
   if (data && data.isAuthed === undefined) {
     // don't know yet
-    console.log('[ProtectedRoute] IS_AUTHED is not sure yet...');
     return <></>;
   }
 
   if (data && data.isAuthed) {
     return <Route {...props} />;
   } else {
-    console.log(`[ProtectedRoute] data: ${JSON.stringify(data)}`);
     return (
       <Redirect
         to={{ pathname: '/login', state: { isAuthed: data.isAuthed } }}
@@ -40,18 +59,58 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = (props) => {
   }
 };
 
-console.log(`[ProtectedRoute] rendering`);
 const Router = () => {
-  const { loading, error, data } = useQuery(IS_AUTHED);
+  const { loading, error, data } = useQuery(GET_CONTEXT);
+
   if (loading) {
-    return null;
+    return <p>Loading...</p>;
   }
+
+  if (error) {
+    console.log(error);
+  }
+
   if (data) {
     return (
       <Switch>
         <Redirect exact from="/" to="/app" />
-        <ProtectedRoute path="/app" component={App} />
-        <ProtectedRoute path="/anotherRoute" />
+        <ProtectedRoute
+          path="/app"
+          render={() => (
+            <App>
+              <ProtectedRoute
+                exact
+                path="/app"
+                render={() => <Dashboard context={data.context} />}
+              />
+              <ProtectedRoute
+                exact
+                path="/app/booking-requests"
+                render={() => <BookingRequests context={data.context} />}
+              />
+              <ProtectedRoute
+                exact
+                path="/app/manage"
+                render={() => <Manage context={data.context} />}
+              />
+              <ProtectedRoute
+                exact
+                path="/app/manage/locations/:id"
+                component={EditLocation}
+              />
+              <ProtectedRoute
+                exact
+                path="/app/manage/organizations/:id"
+                component={EditOrganization}
+              />
+              <ProtectedRoute
+                exact
+                path="/app/manage/create-location"
+                component={CreateLocation}
+              />
+            </App>
+          )}
+        />
         <Route
           path="/login"
           render={() => <Login isAuthed={data.isAuthed} />}

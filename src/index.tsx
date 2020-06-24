@@ -1,10 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { ApolloClient, InMemoryCache } from 'apollo-boost';
-import { ApolloProvider, useQuery } from '@apollo/react-hooks';
-import { createHttpLink, HttpLink } from 'apollo-link-http';
-import { gql } from 'apollo-boost';
-import App from './routes/App';
+import { ApolloProvider } from '@apollo/react-hooks';
+import { createHttpLink } from 'apollo-link-http';
 import * as serviceWorker from './serviceWorker';
 import { typeDefs, resolvers } from './resolvers';
 import './index.css';
@@ -13,6 +11,7 @@ import { theme } from './Theme';
 import { BrowserRouter } from 'react-router-dom';
 import Router from './routes/Router';
 import AutoLoginWrapper from './components/wrappers/AutoLoginWrapper';
+import config from './config';
 
 const cache = new InMemoryCache();
 
@@ -28,14 +27,27 @@ const client = new ApolloClient({
   resolvers,
 });
 
-console.log('[index] Writing cache');
 cache.writeData({
   data: {
-    isAuthed: undefined,
-    user: {},
+    isAuthed: null,
+    user: {
+      __typename: 'User',
+      id: '',
+      email: '',
+    },
+    context: {
+      __typename: 'Context',
+      organization: {
+        __typename: 'Organization',
+        id: localStorage.getItem(config.LS_KEYS.ORG_ID) || '',
+      },
+      location: {
+        __typename: 'Location',
+        id: localStorage.getItem(config.LS_KEYS.LOCATION_ID) || '',
+      },
+    },
   },
 });
-console.log('[index] Finished writing cache');
 
 ReactDOM.render(
   <BrowserRouter>

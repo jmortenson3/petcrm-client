@@ -44,13 +44,18 @@ const Login: FunctionComponent<LoginProps> = ({ children, isAuthed }) => {
     }
   };
 
+  if (error) {
+    console.log(error);
+  }
+
   if (data) {
     console.log(`[Login] data: ${JSON.stringify(data)}`);
-    const { id, email } = data.login;
+    const { email, id } = data.login;
     client.writeData({
       data: {
         isAuthed: true,
         user: {
+          __typename: 'User',
           id,
           email,
         },
